@@ -1,5 +1,5 @@
 
-file="res/MC-L016-T1500-TPAS050-TINC040.res"
+file="res/MC-L016-T1500-TPAS100-TINC020.res"
 
 
 set terminal png
@@ -26,4 +26,3 @@ plot file using 2:12 title "<c_v>",\
 set output "plots/P4_L16_X.png"
 set title "Monte Carlo Ising 2D L=16 \n {/Symbol c}"
 plot file using 2:14 title "{/Symbol c}"
-
