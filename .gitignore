@@ -1,11 +1,19 @@
 # Ignored files #
 
+*.aux
+*.bbl
+*.blg
 *.eps
 *.exe
+*.fdb_latexmk
+*.fls
 *.jpeg
+*.log
 *.not
 *.out
 *.pdf
+*.gz
+*.toc
 *.png
 *.ps
 *.res
