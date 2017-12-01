@@ -1,5 +1,5 @@
 
-file="res/MC-L008-T1400-TPAS100-TINC020.res"
+file="res/MC-L008-*.res"
 
 
 set terminal png

@@ -1,5 +1,5 @@
 
-file="res/MC-L128-T1000-TPAS10-TINC200.res"
+file="res/MC-L128-*.res"
 
 
 set terminal png
@@ -26,4 +26,3 @@ plot file using 2:($1*($6)/($2*$2)) title "<c_v>",\
 set output "plots/P4_L128_X.png"
 set title "Monte Carlo Ising 2D L=128 \n {/Symbol c}"
 plot file using 2:($1*($10)/($2)) title "{/Symbol c}"
-
