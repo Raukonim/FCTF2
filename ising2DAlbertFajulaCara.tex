@@ -1,0 +1,70 @@
+% Definimos el estilo del documento
+\documentclass[10pt,a4paper]{book}
+% Utilizamos el paquete para utilizar español
+\usepackage[catalan]{babel}
+% Utilizamos un paquete para gestionar los acentos y las eñes
+\usepackage[utf8x]{inputenc}
+% Utilizamos el paquete para gestionar imagenes jpg
+\usepackage[pdftex]{graphicx}
+% Definimos la zona de la pagina ocupada por el texto
+%\usepackage{psfrag}
+% Utilizamos el paquete para gestionar headers y footers
+%\usepackage{hyperref}
+
+%\oddsidemargin -1.0cm
+%\headsep -2.4cm
+%\textwidth=18.5cm
+%\textheight=26 cm
+%\usepackage{fullpage}
+
+\usepackage{amsmath,amssymb}
+\usepackage{fancyref}
+\usepackage{cancel}
+\usepackage{tikz}
+%Utilizamos el paquete para gestionar headers y footers
+\usepackage{fancyhdr}
+%\pagestyle{fancyplain}
+%\fancyfoot{}
+\fancyhead[LE RO]{\thepage}
+\fancyhead[LO RE]{Electrodinàmica}
+
+\def\checkmark{\tikz\fill[scale=0.4](0,.35) -- (.25,0) -- (1,.7) -- (.25,.15) -- cycle;}
+\newcommand{\derpar}[2]{\dfrac{\partial #1}{\partial #2}}
+\newcommand{\der}[2]{\dfrac{d #1}{d #2}}
+\newcommand{\dere}[2]{\partial_{#2}#1}
+\newcommand{\intdef}[2]{\int_{#1}^{#2}}
+\newcommand{\lagrange}{\der{}{t}\left(\derpar{L}
+{\dot{q}_j}\right)-\derpar{L}{q_j}=0}
+\newcommand{\betaL}{\dfrac{v^2}{c^2}}
+\newcommand{\gammaL}{\frac{1}{\sqrt{1-\dfrac{v^2}{c^2}}}}
+\newcommand{\grad}{\vec{\nabla}}
+\newcommand{\diver}[1]{\grad\cdot\vec{#1}}
+\newcommand{\rot}[1]{\grad\times\vec{#1}}
+
+\newcommand{\SRI}{\emph{SRI$~$}}
+\newcommand{\SCM}{\emph{S$_{CM}~$}}
+
+
+% Definimos titulo, autor, fecha.
+\title{Resum Electrodinàmica}
+%\textbf{Grau de Física}
+\author{Albert Fajula Cara}
+\date{\today}
+
+
+%Empieza el documento
+\begin{document}
+\maketitle
+%\textbf{Grau de Física \\
+%Electrodinàmica. Curs 2015-16 \\}
+%\[\]
+\numberwithin{equation}{section}
+\setcounter{section}{-1}
+%\setcounter{secnumdepth}{5}
+\tableofcontents
+%\newpage
+\chapter{Introducci\'{o}}
+
+
+%finalització del document
+\end{document}
