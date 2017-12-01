@@ -1,5 +1,5 @@
 c23456789012345678901234567890123456789012345678901234567890123456789012
-
+      PROGRAM MC2
       IMPLICIT NONE
       INTEGER*4 NRAND, I, J, L, N, IRAND, IR, JR, IPAS, IMC, MCTOT,T
       INTEGER*4 SUMA, MCINI, MCD, ILLAV, LLAV0,NLLAV,ENERDIF, LLAV1
@@ -11,10 +11,14 @@ c23456789012345678901234567890123456789012345678901234567890123456789012
       CHARACTER*29 NOM
       CHARACTER*8 DATE
       CHARACTER*17 FILENAME
-      NAMELIST /DADES/ NOM,L,TEMP,TPAS,TINC,NLLAV,LLAV0,MCTOT,MCINI,MCD 
+      NAMELIST /DADES/ NOM,L,TEMP,TPAS,TINC,NLLAV,LLAV0,MCTOT,MCINI,MCD
 
+c     Cridem CPU_TIME per calcular el temps d'execució
       CALL CPU_TIME(TIME1)
 
+c     Llegim el nom del fitxer de dades d'entrada incorporat
+c     al executar el programa ./MC2.exe /data/MC2-Lxxx.dat
+c     L màxima 256
       DO I = 1, IARGC()
         CALL GETARG(i, filename)
         WRITE (*,*) filename
@@ -22,7 +26,7 @@ c23456789012345678901234567890123456789012345678901234567890123456789012
 
 
 
-c      Lectura de parametres inicials
+c      Lectura de parametres inicials a partir del fixer de dades
 c      L=16
 c      TEMP=4.5D0
 c      TPAS=10
@@ -41,31 +45,29 @@ c      NOM="SIMUL-TEMP4500-MCTOT10000"
 c     DIMENSIONS
       N=L*L
       NRAND=3*N
-
+c     valors inicials per calcular el primer punt de d<e>/dT
       SUME0=-2
       TEMP0=1.51d0
 
-c     inicialització PBC 
-
+c     inicialització PeriodicBoundaryConditions
       PBC(0)=L
       PBC(L+1)=1
       DO I=1,L
         PBC(I)=I
       ENDDO
-      
+
 c      DO I=0,257
 c        WRITE(*,*) PBC(I)
 c      ENDDO
+c     Obrim els fitxers en els que escriurem els output i els resultats
+      OPEN(UNIT=12,FILE="output/"//NOM//".out") !fitxer d'escriptura d'outputs
+      OPEN(UNIT=13,FILE="res/"//NOM//".res") !fitxer d'escriptura de resultats
 
-      OPEN(UNIT=12,FILE="output/"//NOM//".out")
-      OPEN(UNIT=13,FILE="res/"//NOM//".res")
-
-      LLAV1=LLAV0
 
 c     Bucle de temperatures
       DO T=0,TPAS
 
-c       SUMATORIS
+c       inicialitzem els SUMATORIS
         SUM0=0.0D0
         SUME=0.0D0
         SUME2=0.0D0
@@ -73,7 +75,7 @@ c       SUMATORIS
         SUMM2=0.0D0
         SUMAM=0.0D0
 
-c       vector de l'exponencial
+c       vector de l'exponencial per calcular-la un sol cop
 
         EXPTEMP(1)=0d0
         EXPTEMP(2)=0d0
@@ -88,13 +90,12 @@ c       BUCLE Promitjos llavor
         DO ILLAV=LLAV0, LLAV0+NLLAV-1, 1
 c          WRITE(*,*) "Llavor=", ILLAV
 
+c         Cridem RCARIN per inicialitzar el calcul dels nombres aleatoris
           CALL RCARIN(ILLAV, RRAND, NRAND)
-          CALL RCARRY(RRAND, NRAND)
+          CALL RCARRY(RRAND, NRAND) !omplim el vector de nombres aleatoris
           IRAND=1
-  
-  
-  
-          IRAND=1
+
+c         Creem la matriu d'spins aleatoriament amb 1 i -1
           DO I=1,L
             DO J=1,L
               IF (RRAND(IRAND).lt.0.5E0) THEN
@@ -106,26 +107,31 @@ c                WRITE(*,*) I, J
               IRAND=IRAND+1
             ENDDO
           ENDDO
-      
+
+c         Inicialitzem l'index de MC
           IMC=0
-          MAG=MAGNE(S,L)
-          ENE=ENERG(S,L,PBC)
-c          WRITE(12,*) IMC, ENE, MAG
+c         Calculem la magnetització i la energia inicials
+          MAG=MAGNE(S,L)      !M/N
+          ENE=ENERG(S,L,PBC)  !E/N
+          WRITE(12,*) IMC, ENE, MAG
 
 c         BUCLE MONTECARLO
           DO IMC=1,MCTOT
+c           Tornem a omplir el vector de nous nombres aleatoris
             CALL RCARRY(RRAND, NRAND)
             IRAND=1
+c           Bucle de le N propostes aleatòries de flip d'spin
             DO IPAS=1,N
+c             escollim els index IR i JR aleatoriament
               IR=INT(RRAND(IRAND)*L)+1
               IRAND=IRAND+1
 c             WRITE(*,*) "IR", IR
               JR=INT(RRAND(IRAND)*L)+1
               IRAND=IRAND+1
 c             WRITE(*,*) "JR", JR
+c             Cridem la funció DELTAENER, calculem el canvi energetic proposat
               ENERDIF=DELTAENER(IR,JR,S,PBC)
-              
-c             WRITE(*,*) DE
+c             WRITE(*,*) ENERDIF
               IF (ENERDIF.LE.0.D0) THEN
                 S(IR, JR)=-S(IR, JR)
               ELSE
@@ -136,32 +142,34 @@ c             WRITE(*,*) DE
                 ENDIF
               ENDIF
             ENDDO
+
+c           Calculem variables pels multimples de MC dessitjats
             IF((IMC.GT.MCINI).AND.(MCD*(IMC/MCD).EQ.IMC)) THEN
-              MAG=MAGNE(S,L)
-              ENE=ENERG(S,L,PBC)
-              SUM0=SUM0+1d0
-              SUME=SUME+ENE
-              SUME2=SUME2+(ENE*ENE)
-              SUMM=SUMM+MAG
-              SUMM2=SUMM2+(MAG*MAG)
-              SUMAM=SUMAM+ABS(MAG)
-              WRITE(12,*) IMC, ENE, MAG
+              MAG=MAGNE(S,L)            !magnetització
+              ENE=ENERG(S,L,PBC)        !energia
+              SUM0=SUM0+1d0             !comtador per normalitzar
+              SUME=SUME+ENE             !sumem e
+              SUME2=SUME2+(ENE*ENE)     !sumem e^2
+              SUMM=SUMM+MAG             !sumem m
+              SUMM2=SUMM2+(MAG*MAG)     !sumem m^2
+              SUMAM=SUMAM+ABS(MAG)      !sumem |m|
+              WRITE(12,*) IMC, ENE, MAG !Escrivim els outputs
             ENDIF
           ENDDO
         ENDDO
+c       Mostrem per pantalla la temperatura calculada
         WRITE(*,*) 'Temperatura calculada', TEMP
 
-c        LLAV1=LLAV1+NLLAV
-
 c       Normalitzem i calculem variances
-        SUME=SUME/SUM0
-        SUME2=SUME2/SUM0
-        SUMM=SUMM/SUM0
-        SUMM2=SUMM2/SUM0
-        SUMAM=SUMAM/SUM0
-        VARE=SUME2-(SUME*SUME)
-        VARM=SUMM2-(SUMAM*SUMAM)
+        SUME=SUME/SUM0            !<e>
+        SUME2=SUME2/SUM0          !<e^2>
+        SUMM=SUMM/SUM0            !<m>
+        SUMM2=SUMM2/SUM0          !<m^2>
+        SUMAM=SUMAM/SUM0          !<|m|>
+        VARE=SUME2-(SUME*SUME)    !Var(E)
+        VARM=SUMM2-(SUMAM*SUMAM)  !Var(M)
 
+c       Escribim els resultats al fitxer
 c                   N,T,SUM,<e>,<e2>,VAR<e>,<m>,<|m|>,<m2>,VAR<m>,
         WRITE(13,*) N,TEMP,SUM0,SUME,SUME2,VARE,SUMM,SUMAM,SUMM2,VARM,
 c                   sqrt<m2>, c_v
@@ -170,11 +178,14 @@ c                   d<e>/dT
      +              ((SUME-SUME0)/(TEMP-TEMP0)),
 c                   chi
      +              N*VARM/TEMP
+
+c       calculem el temps del pas de temperatures
         CALL CPU_TIME(TIMEPAST)
         WRITE(*,*)"CPUTIME T =",TIMEPAST-TIME1
 c       Guardem resultats per calcular la derivada d<e>/dT
         SUME0=SUME
         TEMP0=TEMP
+c       modifiquem l'increment de temperatura per T~Tc
         IF ((TEMP.GT.2).AND.(TEMP.LT.2.5d0)) THEN
           TEMP=TEMP+(TINC/2)
         ELSE
@@ -184,6 +195,7 @@ c        WRITE(*,*) "Magnetització;",MAG
 c        WRITE(*,*) "Energia", ENE
       ENDDO
 
+c     Tanquem els fitxers d'escriptura
       CLOSE(12)
       CLOSE(13)
 
@@ -191,7 +203,7 @@ c     CONTROL de temps CPU final
       CALL CPU_TIME(TIME2)
 c     Data i hora final
       CALL DATE_AND_TIME(DATE=DATE)
-
+c     Mostrem per pantalla la data i el temps total d'execució
       WRITE(*,*) DATE
       WRITE(*,*) "CPUTIME =",TIME2-TIME1
 
@@ -203,6 +215,7 @@ c     ******************************************************************
 c     *                     FUNCTION MAGNE                             *
 c     *                                                                *
 c     *             calcula la magnnetització per spin                 *
+c     *                          S,L                                   *
 c     *                                                                *
 c     ******************************************************************
 c
@@ -233,9 +246,10 @@ c     ******************************************************************
 c     *                     FUNCTION ENERG                             *
 c     *                                                                *
 c     *                calcula l'energia per spin                      *
+c     *                         S,L,PBC                                *
 c     *                                                                *
 c     ******************************************************************
-c 
+c
 
       REAL*8 FUNCTION ENERG(S,L, PBC)
 
@@ -260,30 +274,30 @@ c
 
 
 c     ******************************************************************
-c     *                        Funció DeltaEner                        *
+c     *                        Funció DELTAENER                        *
 c     *                                                                *
-c     *                  calcula l'increment de l'energia              * 
-c     *                            i, j, s(ij)                         *
+c     *                  calcula l'increment de l'energia              *
+c     *                            i, j, s(), PBC()                    *
 c     *                                                                *
 c     ******************************************************************
 c
 
 
       INTEGER*4 FUNCTION DELTAENER(i, j, S,PBC)
-      
+
       INTEGER*4 S(1:256,1:256)
       INTEGER*4 SUMVEINS, PBC(0:257), i, j
-      
+
       SUMVEINS=0
-      
+
       SUMVEINS=(S(i,PBC(j+1))+S(i,PBC(j-1)))
       SUMVEINS=SUMVEINS+(S(PBC(i+1),j)+S(PBC(i-1),j))
-      
+
       DELTAENER=2*S(i,j)*SUMVEINS
-      
+
 c      Write(*,*) S(i,j), S(i,PBC(j+1)), S(i,PBC(j-1))
 c     +    ,S(PBC(i+1),j), S(PBC(i-1),j), SUMVEINS, DELTAENER
-      
+
       RETURN
       END
 
@@ -374,4 +388,3 @@ C
 
       RETURN
       END
-     
