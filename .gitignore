@@ -8,6 +8,7 @@
 *.fdb_latexmk
 *.fls
 *.jpeg
+*.latexcfg
 *.log
 *.not
 *.out
